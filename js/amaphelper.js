@@ -1,3 +1,6 @@
+var startPosInfo;
+var endPosInfo;
+
 function initialAMap() {
     var map = new AMap.Map('container', {
         mapStyle: 'amap://styles/normal',
@@ -82,20 +85,6 @@ function initialAMapPlugins(map) {
             driving.search();
         });
 
-        // add path editing
-        map.plugin('AMap.DragRoute', function () {
-            // path 是驾车导航的起、途径和终点，最多支持16个途经点
-            var path = []
-
-            path.push([116.303843, 39.983412])
-            path.push([116.321354, 39.896436])
-            path.push([116.407012, 39.992093])
-
-            var route = new AMap.DragRoute(map, path, AMap.DrivingPolicy.LEAST_FEE)
-            // 查询导航路径并开启拖拽导航
-            route.search()
-        }) // end path editing
-
         //输入提示 目的地
         var autoOptions = {
             input: "tipinput"
@@ -114,8 +103,37 @@ function initialAMapPlugins(map) {
             auto.on("select", select);//注册监听，当选中某条记录时会触发
             function select(e) {
                 placeSearch.setCity(e.poi.adcode);
-                placeSearch.search(e.poi.name);  //关键字查询查询
-                console.log("目的地:" + e.poi.name);
+                placeSearch.search(e.poi.name, function(status, data) {
+                  if (status !== 'complete')
+                    return;
+                  var pois = data.poiList.pois;
+                  for (var i = 0; i < pois.length; ++i) {
+                    var marker = new AMap.Marker({
+                      content : '<div class="marker" >' + i + '</div>',
+                      position : pois[i].location,
+                      map : map,
+                      label : {
+                        offset :
+                            new AMap.Pixel(5, 0), //修改label相对于maker的位置
+                        content : "设为目的地"
+                      }
+                    });
+                    marker.id = pois[i].id;
+                    marker.name = pois[i].name;
+                    marker.on('click', function() {
+                      endPosInfo = this.getPosition();
+                      drawRoutingPath(map, startPosInfo, endPosInfo);
+                      console.log("目的地:Selected:" + this.name +
+                                  " pos:" + this.getPosition());
+                      this.hide();
+                      map.detailOnAMAP({
+                        name : this.name,
+                        location : this.getPosition(),
+                        id : this.id
+                      })
+                    })
+                  }
+                }); //关键字查询查询
             }
         });
 
@@ -127,7 +145,36 @@ function initialAMapPlugins(map) {
             auto.on("select", select);//注册监听，当选中某条记录时会触发
             function select(e) {
                 placeSearch.setCity(e.poi.adcode);
-                placeSearch.search(e.poi.name);  //关键字查询查询
+                placeSearch.search(e.poi.name, function(status, data) {
+                  if (status !== 'complete')
+                    return;
+                  var pois = data.poiList.pois;
+                  for (var i = 0; i < pois.length; ++i) {
+                    var marker = new AMap.Marker({
+                      content : '<div class="marker" >' + i + '</div>',
+                      position : pois[i].location,
+                      map : map,
+                      label : {
+                        offset :
+                            new AMap.Pixel(5, 0), //修改label相对于maker的位置
+                        content : "设为出发地"
+                      }
+                    });
+                    marker.id = pois[i].id;
+                    marker.name = pois[i].name;
+                    marker.on('click', function() {
+                      console.log("出发地:Selected:" + this.name +
+                                  " pos:" + this.getPosition());
+                      startPosInfo = this.getPosition();
+                      this.hide();
+                      map.detailOnAMAP({
+                        name : this.name,
+                        location : this.getPosition(),
+                        id : this.id
+                      });
+                    })
+                  }
+                }); //关键字查询查询
                 console.log("出发地:" + e.poi.name);
             }
         });
@@ -146,6 +193,21 @@ function initialAMapPlugins(map) {
 
 
     }); // Ended AMap.plugin
+}
+
+function drawRoutingPath(map, startPos, endPos) {
+  // add path editing
+  map.plugin('AMap.DragRoute', function() {
+    // path 是驾车导航的起、途径和终点，最多支持16个途经点
+    var path = []
+
+    path.push([ startPos.lng, startPos.lat ])
+    path.push([ endPos.lng, endPos.lat ])
+
+    var route = new AMap.DragRoute(map, path, AMap.DrivingPolicy.LEAST_FEE)
+    // 查询导航路径并开启拖拽导航
+    route.search()
+  }) // end path editing
 }
 
 function updateMonitorData(map, capitals) {
