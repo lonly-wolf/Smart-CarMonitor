@@ -76,17 +76,6 @@ function initialAMapPlugins(map) {
         //     map.addControl(toolBar);
         // });
 
-        // add Driving Bar
-        AMap.plugin('AMap.Driving', function () {
-            var driving = new AMap.Driving({
-                zIndex: 12,
-                policy: AMap.DrivingPolicy.LEAST_TIME,
-                buttonOffset: new AMap.Pixel(10, 20),//定位按钮与设置的停靠位置的偏移量，默认：Pixel(10, 20)
-            });
-            map.addControl(driving);
-            driving.search();
-        });
-
         //输入提示 目的地
         var autoOptions = {
             input: "tipinput"
@@ -223,6 +212,22 @@ function drawRoutingPath(map, startPos, endPos) {
     }) // end path editing
 }
 
+function addDrivingPlugins(pathArray) {
+    // add driving plugins
+    // add Driving Bar
+    AMap.plugin('AMap.Driving', function () {
+        var driving = new AMap.Driving({
+            zIndex: 12,
+            policy: AMap.DrivingPolicy.LEAST_TIME,
+            buttonOffset: new AMap.Pixel(10, 20),//定位按钮与设置的停靠位置的偏移量，默认：Pixel(10, 20)
+        });
+
+        driving.search(pathArray, function (status, results) {
+
+        });
+    });
+}
+
 function updateMonitorData(map, capitals) {
     // ready to load monitor data
     var title = '详细';
@@ -242,7 +247,7 @@ function updateMonitorData(map, capitals) {
             strokeOpacity: 0.5,
             fillColor: color,
             fillOpacity: 0.5,
-            zIndex: 11,
+            zIndex: 20,
             bubble: true,
             cursor: 'pointer',
             clickable: true,
