@@ -1,5 +1,7 @@
 var startPosInfo;
 var endPosInfo;
+var sourceMarkArray = [];
+var dstMarkArray = [];
 
 function initialAMap() {
     var map = new AMap.Map('container', {
@@ -103,36 +105,43 @@ function initialAMapPlugins(map) {
             auto.on("select", select);//注册监听，当选中某条记录时会触发
             function select(e) {
                 placeSearch.setCity(e.poi.adcode);
-                placeSearch.search(e.poi.name, function(status, data) {
-                  if (status !== 'complete')
-                    return;
-                  var pois = data.poiList.pois;
-                  for (var i = 0; i < pois.length; ++i) {
-                    var marker = new AMap.Marker({
-                      content : '<div class="marker" >' + i + '</div>',
-                      position : pois[i].location,
-                      map : map,
-                      label : {
-                        offset :
-                            new AMap.Pixel(5, 0), //修改label相对于maker的位置
-                        content : "设为目的地"
-                      }
-                    });
-                    marker.id = pois[i].id;
-                    marker.name = pois[i].name;
-                    marker.on('click', function() {
-                      endPosInfo = this.getPosition();
-                      drawRoutingPath(map, startPosInfo, endPosInfo);
-                      console.log("目的地:Selected:" + this.name +
-                                  " pos:" + this.getPosition());
-                      this.hide();
-                      map.detailOnAMAP({
-                        name : this.name,
-                        location : this.getPosition(),
-                        id : this.id
-                      })
-                    })
-                  }
+                placeSearch.search(e.poi.name, function (status, data) {
+                    if (status !== 'complete')
+                        return;
+                    var pois = data.poiList.pois;
+                    for (var i = 0; i < pois.length; ++i) {
+                        var marker = new AMap.Marker({
+                            content: '<div class="marker" >' + i + '</div>',
+                            position: pois[i].location,
+                            map: map,
+                            label: {
+                                offset:
+                                    new AMap.Pixel(5, 0), //修改label相对于maker的位置
+                                content: "设为目的地"
+                            }
+                        });
+
+                        dstMarkArray.push(marker);
+
+                        marker.id = pois[i].id;
+                        marker.name = pois[i].name;
+                        marker.on('click', function () {
+                            endPosInfo = this.getPosition();
+                            drawRoutingPath(map, startPosInfo, endPosInfo);
+                            console.log("目的地:Selected:" + this.name +
+                                " pos:" + this.getPosition());
+
+                            dstMarkArray.forEach(it => {
+                                it.hide();
+                            });
+                            this.hide();
+                            map.detailOnAMAP({
+                                name: this.name,
+                                location: this.getPosition(),
+                                id: this.id
+                            })
+                        })
+                    }
                 }); //关键字查询查询
             }
         });
@@ -145,35 +154,39 @@ function initialAMapPlugins(map) {
             auto.on("select", select);//注册监听，当选中某条记录时会触发
             function select(e) {
                 placeSearch.setCity(e.poi.adcode);
-                placeSearch.search(e.poi.name, function(status, data) {
-                  if (status !== 'complete')
-                    return;
-                  var pois = data.poiList.pois;
-                  for (var i = 0; i < pois.length; ++i) {
-                    var marker = new AMap.Marker({
-                      content : '<div class="marker" >' + i + '</div>',
-                      position : pois[i].location,
-                      map : map,
-                      label : {
-                        offset :
-                            new AMap.Pixel(5, 0), //修改label相对于maker的位置
-                        content : "设为出发地"
-                      }
-                    });
-                    marker.id = pois[i].id;
-                    marker.name = pois[i].name;
-                    marker.on('click', function() {
-                      console.log("出发地:Selected:" + this.name +
-                                  " pos:" + this.getPosition());
-                      startPosInfo = this.getPosition();
-                      this.hide();
-                      map.detailOnAMAP({
-                        name : this.name,
-                        location : this.getPosition(),
-                        id : this.id
-                      });
-                    })
-                  }
+                placeSearch.search(e.poi.name, function (status, data) {
+                    if (status !== 'complete')
+                        return;
+                    var pois = data.poiList.pois;
+                    for (var i = 0; i < pois.length; ++i) {
+                        var marker = new AMap.Marker({
+                            content: '<div class="marker" >' + i + '</div>',
+                            position: pois[i].location,
+                            map: map,
+                            label: {
+                                offset:
+                                    new AMap.Pixel(5, 0), //修改label相对于maker的位置
+                                content: "设为出发地"
+                            }
+                        });
+                        sourceMarkArray.push(marker);
+                        marker.id = pois[i].id;
+                        marker.name = pois[i].name;
+                        marker.on('click', function () {
+                            console.log("出发地:Selected:" + this.name +
+                                " pos:" + this.getPosition());
+                            startPosInfo = this.getPosition();
+                            sourceMarkArray.forEach(it => {
+                                it.hide();
+                            });
+                            this.hide();
+                            map.detailOnAMAP({
+                                name: this.name,
+                                location: this.getPosition(),
+                                id: this.id
+                            });
+                        })
+                    }
                 }); //关键字查询查询
                 console.log("出发地:" + e.poi.name);
             }
@@ -196,18 +209,18 @@ function initialAMapPlugins(map) {
 }
 
 function drawRoutingPath(map, startPos, endPos) {
-  // add path editing
-  map.plugin('AMap.DragRoute', function() {
-    // path 是驾车导航的起、途径和终点，最多支持16个途经点
-    var path = []
+    // add path editing
+    map.plugin('AMap.DragRoute', function () {
+        // path 是驾车导航的起、途径和终点，最多支持16个途经点
+        var path = []
 
-    path.push([ startPos.lng, startPos.lat ])
-    path.push([ endPos.lng, endPos.lat ])
+        path.push([startPos.lng, startPos.lat])
+        path.push([endPos.lng, endPos.lat])
 
-    var route = new AMap.DragRoute(map, path, AMap.DrivingPolicy.LEAST_FEE)
-    // 查询导航路径并开启拖拽导航
-    route.search()
-  }) // end path editing
+        var route = new AMap.DragRoute(map, path, AMap.DrivingPolicy.LEAST_FEE)
+        // 查询导航路径并开启拖拽导航
+        route.search()
+    }) // end path editing
 }
 
 function updateMonitorData(map, capitals) {
