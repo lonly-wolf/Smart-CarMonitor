@@ -19,11 +19,11 @@ function initialAMap() {
         center: [116.397428, 39.90923],//中心点坐标
         pitch: 0,
         resizeEnable: true,
-        rotateEnable: true,
-        pitchEnable: true,
-        expandZoomRange: true,
-        buildingAnimation: true,//楼块出现是否带动画
-        viewMode: '3D'//使用3D视图
+        rotateEnable: false,
+        pitchEnable: false,
+        expandZoomRange: false,
+        buildingAnimation: false,//楼块出现是否带动画
+        viewMode: '2D'//使用3D视图
     });
 
     // add real time traffic info to map
@@ -35,12 +35,12 @@ function initialAMap() {
     map.add(tarfficLayer);
 
     // add buinding layer
-    var buildings = new AMap.Buildings({
-        'zooms': [1, 100],
-        'zIndex': 11,
-        'heightFactor': 2 // 2倍于默认高度，3D下有效
-    });//楼块图层
-    map.add(buildings);
+    // var buildings = new AMap.Buildings({
+    //     'zooms': [1, 100],
+    //     'zIndex': 11,
+    //     'heightFactor': 2 // 2倍于默认高度，3D下有效
+    // });//楼块图层
+    // map.add(buildings);
 
     return map;
 }
