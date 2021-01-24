@@ -256,24 +256,9 @@ function updateMonitorData(map, capitals) {
         })
 
         facilities.push(marker);
-        var infoWindow = new AMap.InfoWindow({
-            isCustom: true, //使用自定义窗体
-            content: createInfoWindow(map, title, capitals[i].content),
-            offset: new AMap.Pixel(0, -20)
-        });
-        infoWindowArr.push(infoWindow);
     }
 
     map.add(facilities);
-
-    for (var i = 0; i < facilities.length; i++) {
-        (function (i) {
-            facilities[i].on('click', function (event) {
-                infoWindowArr[i].open(map, event.target.getPosition());
-            });
-        })(i)
-    }
-
 }
 
 //解析定位结果
