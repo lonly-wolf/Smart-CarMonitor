@@ -1,4 +1,4 @@
-var capitals = [{
+var monitorDatas = [{
     adcode: "",
     center: [116.451065, 39.797512], aa: "2", name: "旧忠路与隆华路 西向东",
     text: '旧忠路与隆华路 西向东',
