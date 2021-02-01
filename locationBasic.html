@@ -74,6 +74,47 @@
             } else {
                 button.style.marginRight = '10px';
             }
+
+            // check whether has any action
+            window.onload = function () {
+
+                (function ($) {
+                    funObj = {
+                        actionWatcherFun: 'actionWatcherFun',
+                    }
+                    $[funObj.actionWatcherFun] = function (time) {
+                        var time = time || 2;
+                        var userTime = time * 60;
+                        var objTime = {
+                            init: 0,
+                            time: function () {
+                                objTime.init += 1;
+                                if (objTime.init >= userTime) {
+                                    objTime.init = 0;
+                                    setActionMoved(false)
+                                }
+                            },
+                            eventFun: function () {
+                                clearInterval(testUser);
+                                objTime.init = 0;
+                                testUser = setInterval(objTime.time, 1000);
+                                setActionMoved(true)
+                            }
+                        }
+
+                        var testUser = setInterval(objTime.time, 1000);
+
+                        var body = document.querySelector('html');
+                        body.addEventListener("click", objTime.eventFun);
+                        body.addEventListener("keydown", objTime.eventFun);
+                        body.addEventListener("mousemove", objTime.eventFun);
+                        body.addEventListener("mousewheel", objTime.eventFun);
+                    }
+                })(window)
+
+                actionWatcherFun(0.33);
+            }
+
         </script>
     </body>
 

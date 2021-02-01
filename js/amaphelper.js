@@ -7,169 +7,141 @@ var locationObject
 var mapObject
 
 var timer
+var timer2
+var hasMoved
+
+function setActionMoved(moved) { hasMoved = moved }
 
 function initialAMap() {
-    var map = new AMap.Map('container', {
-        mapStyle: 'amap://styles/normal',
-        resizeEnable: true,
-        showLabel: true, //显示地图文字标记
-        layers: [
-            new AMap.TileLayer(),
-            // new AMap.TileLayer.Satellite(),
-            new AMap.TileLayer.RoadNet()
-        ],
-        zooms: [1, 100],
-        zoom: 10,
-        zIndex: 1,
-        center: [116.397428, 39.90923],//中心点坐标
-        pitch: 0,
-        resizeEnable: true,
-        rotateEnable: false,
-        pitchEnable: false,
-        expandZoomRange: false,
-        buildingAnimation: false,//楼块出现是否带动画
-        viewMode: '2D'//使用3D视图
-    });
+  hasMoved = false
+  var map = new AMap.Map('container', {
+    mapStyle : 'amap://styles/normal',
+    resizeEnable : true,
+    showLabel : true, //显示地图文字标记
+    layers : [
+      new AMap.TileLayer(),
+      // new AMap.TileLayer.Satellite(),
+      new AMap.TileLayer.RoadNet()
+    ],
+    zooms : [ 1, 100 ],
+    zoom : 10,
+    zIndex : 1,
+    center : [ 116.397428, 39.90923 ], //中心点坐标
+    pitch : 0,
+    resizeEnable : true,
+    rotateEnable : false,
+    pitchEnable : false,
+    expandZoomRange : false,
+    buildingAnimation : false, //楼块出现是否带动画
+    viewMode : '2D'            //使用3D视图
+  });
 
-    // add real time traffic info to map
-    var tarfficLayer = new AMap.TileLayer.Traffic({
-        zIndex: 10,
-        'autoRefresh': true,     //是否自动刷新，默认为false
-        'interval': 30,         //刷新间隔，默认180s
-    });
-    map.add(tarfficLayer);
-
-    // add buinding layer
-    // var buildings = new AMap.Buildings({
-    //     'zooms': [1, 100],
-    //     'zIndex': 11,
-    //     'heightFactor': 2 // 2倍于默认高度，3D下有效
-    // });//楼块图层
-    // map.add(buildings);
-
-    return map;
+  // add real time traffic info to map
+  var tarfficLayer = new AMap.TileLayer.Traffic({
+    zIndex : 10,
+    'autoRefresh' : true, //是否自动刷新，默认为false
+    'interval' : 30,      //刷新间隔，默认180s
+  });
+  map.add(tarfficLayer);
+  return map;
 }
 
 function initialAMapPlugins(map) {
     // load AMap's plugin async
-    AMap.plugin('AMap.Geolocation', function () {
-        // add location module
-        var geolocation = new AMap.Geolocation({
-          enableHighAccuracy : true, //是否使用高精度定位，默认:true
-          timeout : 30000,           //超过30秒后停止定位，默认：5s
-          buttonPosition : 'RB',     //定位按钮的停靠位置
-          buttonOffset : new AMap.Pixel(
-              10, 20), //定位按钮与设置的停靠位置的偏移量，默认：Pixel(10, 20)
-          zoomToAccuracy : false, //定位成功后是否自动调整地图视野到定位点
-          panToLocation : false
-        });
-        map.addControl(geolocation);
-        locationObject = geolocation
+    AMap.plugin('AMap.Geolocation', function() {
+      // add location module
+      var geolocation = new AMap.Geolocation({
+        enableHighAccuracy : true, //是否使用高精度定位，默认:true
+        timeout : 30000,           //超过30秒后停止定位，默认：5s
+        buttonPosition : 'RB',     //定位按钮的停靠位置
+        buttonOffset : new AMap.Pixel(
+            10, 20), //定位按钮与设置的停靠位置的偏移量，默认：Pixel(10, 20)
+        zoomToAccuracy : false, //定位成功后是否自动调整地图视野到定位点
+        panToLocation : false
+      });
+      map.addControl(geolocation);
+      locationObject = geolocation
 
+      // bind location call back method
+      geolocation.getCurrentPosition(function(status, result) {
+        if (status == 'complete') {
+          onComplete(result)
+        } else {
+          onError(result)
+        }
+      });
+
+      mapObject = map
+
+      timer = setInterval(function() {
+        console.log('Ready to get current position......');
         // bind location call back method
-        geolocation.getCurrentPosition(function (status, result) {
-            if (status == 'complete') {
-                onComplete(result)
-            } else {
-                onError(result)
-            }
+        locationObject.getCurrentPosition(function(status, result) {
+          if (status == 'complete') {
+            onComplete(result)
+          } else {
+            onError(result)
+          }
         });
+      }, 5000);
 
-        mapObject = map
+      timer2 = setInterval(function() {
+        console.log('Ready to draw route.....');
+        // bind location call back method
+        if (!hasMoved) {
+          updateStartAddress(startPosInfo)
+        }
+      }, 20000);
+    });
 
-        timer = setInterval(function () {
-            console.log('Ready to get current position......');
-            // bind location call back method
-            locationObject.getCurrentPosition(function (status, result) {
-                if (status == 'complete') {
-                    onComplete(result)
-                } else {
-                    onError(result)
-                }
+    //输入提示 目的地
+    var autoOptions = {input : "tipinput"};
+
+    //输入提示 出发地
+    var autoOptions2 = {input : "tipinput2"};
+
+    AMap.plugin([ 'AMap.PlaceSearch', 'AMap.AutoComplete' ], function() {
+      var auto = new AMap.AutoComplete(autoOptions);
+      var placeSearch = new AMap.PlaceSearch({map : map}); //构造地点查询类
+      auto.on("select", select); //注册监听，当选中某条记录时会触发
+      function select(e) {
+        placeSearch.setCity(e.poi.adcode);
+        placeSearch.search(e.poi.name, function(status, data) {
+          if (status !== 'complete')
+            return;
+          var pois = data.poiList.pois;
+          for (var i = 0; i < pois.length; ++i) {
+            var marker = new AMap.Marker({
+              content : '<div class="marker" >' + i + '</div>',
+              position : pois[i].location,
+              map : map,
+              label : {
+                offset : new AMap.Pixel(5, 0), //修改label相对于maker的位置
+                content : "设为目的地"
+              }
             });
-        }, 20000);
 
-        // add toolBar
-        // AMap.plugin('AMap.ToolBar', function () {
-        //     var toolBar = new AMap.ToolBar({
-        //         buttonOffset: new AMap.Pixel(10, 20),//定位按钮与设置的停靠位置的偏移量，默认：Pixel(10, 20)
+            dstMarkArray.push(marker);
 
-        //     });
-        //     map.addControl(toolBar);
-        // });
+            marker.id = pois[i].id;
+            marker.name = pois[i].name;
+            marker.on('click', function() {
+              endPosInfo = this.getPosition();
+              drawRoutingPath(map, startPosInfo, endPosInfo);
+              console.log("目的地:Selected:" + this.name +
+                          " pos:" + this.getPosition());
 
-        //输入提示 目的地
-        var autoOptions = {
-            input: "tipinput"
-        };
-
-        //输入提示 出发地
-        var autoOptions2 = {
-            input: "tipinput2"
-        };
-
-        AMap.plugin(['AMap.PlaceSearch', 'AMap.AutoComplete'], function () {
-            var auto = new AMap.AutoComplete(autoOptions);
-            var placeSearch = new AMap.PlaceSearch({
-                map: map
-            });  //构造地点查询类
-            auto.on("select", select);//注册监听，当选中某条记录时会触发
-            function select(e) {
-                placeSearch.setCity(e.poi.adcode);
-                placeSearch.search(e.poi.name, function (status, data) {
-                    if (status !== 'complete')
-                        return;
-                    var pois = data.poiList.pois;
-                    for (var i = 0; i < pois.length; ++i) {
-                        var marker = new AMap.Marker({
-                            content: '<div class="marker" >' + i + '</div>',
-                            position: pois[i].location,
-                            map: map,
-                            label: {
-                                offset:
-                                    new AMap.Pixel(5, 0), //修改label相对于maker的位置
-                                content: "设为目的地"
-                            }
-                        });
-
-                        dstMarkArray.push(marker);
-
-                        marker.id = pois[i].id;
-                        marker.name = pois[i].name;
-                        marker.on('click', function () {
-                            endPosInfo = this.getPosition();
-                            drawRoutingPath(map, startPosInfo, endPosInfo);
-                            console.log("目的地:Selected:" + this.name +
-                                " pos:" + this.getPosition());
-
-                            dstMarkArray.forEach(it => {
-                                it.hide();
-                            });
-                            this.hide();
-                            map.detailOnAMAP({
-                                name: this.name,
-                                location: this.getPosition(),
-                                id: this.id
-                            })
-                        })
-                    }
-                }); //关键字查询查询
-            }
-        });
-
-        // //加载天气查询插件
-        // AMap.plugin('AMap.Weather', function () {
-        //     //创建天气查询实例
-        //     var weather = new AMap.Weather();
-
-        //     //执行实时天气信息查询
-        //     weather.getLive('北京市', function (err, data) {
-        //         console.log(err, data);
-        //     });
-        // });
-        // map.addControl(weather);
-
-
+              dstMarkArray.forEach(it => { it.hide(); });
+              this.hide();
+              map.detailOnAMAP({
+                name : this.name,
+                location : this.getPosition(),
+                id : this.id
+              })
+            })
+          }
+        }); //关键字查询查询
+      }
     }); // Ended AMap.plugin
 
     mapObject = map
@@ -252,7 +224,6 @@ function onComplete(data) {
     str.push('是否经过偏移：' + (data.isConverted ? '是' : '否'));
     document.getElementById('result').innerHTML = str.join('<br>');
     console.log(str)
-    updateStartAddress(startPosInfo)
 }
 
 function updateStartAddress(posInfo) {
