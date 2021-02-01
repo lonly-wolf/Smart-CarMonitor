@@ -1,4 +1,5 @@
-var startPosInfo;
+var startPosInfo = new AMap.LngLat(116, 39);
+
 var endPosInfo;
 var sourceMarkArray = [];
 var dstMarkArray = [];
@@ -29,8 +30,6 @@ function initialAMap() {
         buildingAnimation: false,//楼块出现是否带动画
         viewMode: '2D'//使用3D视图
     });
-
-    mapObject = map
 
     // add real time traffic info to map
     var tarfficLayer = new AMap.TileLayer.Traffic({
@@ -73,6 +72,8 @@ function initialAMapPlugins(map) {
                 onError(result)
             }
         });
+
+        mapObject = map
 
         timer = setInterval(function () {
             console.log('Ready to get current position......');
@@ -214,6 +215,8 @@ function initialAMapPlugins(map) {
 
 
     }); // Ended AMap.plugin
+
+    mapObject = map
 }
 
 function drawRoutingPath(map, startPos, endPos) {
@@ -297,7 +300,7 @@ function onComplete(data) {
 }
 
 function updateStartAddress(posInfo) {
-  drawRoutingPath(mapObject, startPosInfo, endPosInfo)
+    drawRoutingPath(mapObject, startPosInfo, endPosInfo)
 }
 
 //解析定位错误信息
