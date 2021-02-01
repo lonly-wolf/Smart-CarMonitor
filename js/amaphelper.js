@@ -3,6 +3,7 @@ var endPosInfo;
 var sourceMarkArray = [];
 var dstMarkArray = [];
 var locationObject
+var mapObject
 
 var timer
 
@@ -28,6 +29,8 @@ function initialAMap() {
         buildingAnimation: false,//楼块出现是否带动画
         viewMode: '2D'//使用3D视图
     });
+
+    mapObject = map
 
     // add real time traffic info to map
     var tarfficLayer = new AMap.TileLayer.Traffic({
@@ -281,6 +284,7 @@ function updateMonitorData(map, capitals) {
 function onComplete(data) {
     document.getElementById('status').innerHTML = '定位成功'
     var str = [];
+    startPosInfo = data.position
     str.push('定位结果：' + data.position);
     str.push('定位类别：' + data.location_type);
     if (data.accuracy) {
@@ -289,7 +293,13 @@ function onComplete(data) {
     str.push('是否经过偏移：' + (data.isConverted ? '是' : '否'));
     document.getElementById('result').innerHTML = str.join('<br>');
     console.log(str)
+    updateStartAddress(startPosInfo)
 }
+
+function updateStartAddress(posInfo) {
+  drawRoutingPath(mapObject, startPosInfo, endPosInfo)
+}
+
 //解析定位错误信息
 function onError(data) {
     document.getElementById('status').innerHTML = '定位失败'
