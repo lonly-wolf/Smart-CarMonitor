@@ -30,4 +30,6 @@ for it in content:
         # save path to /js/monitordata.js
         f = open(savePath, 'wb')
         f.write(bytes(monitorData, encoding='utf8'))
+        f.flush()
+        f.close()
         print('Monitor data parse finished!' + ' savePath:' + savePath)
