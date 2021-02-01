@@ -155,52 +155,6 @@ function initialAMapPlugins(map) {
             }
         });
 
-        AMap.plugin(['AMap.PlaceSearch', 'AMap.AutoComplete'], function () {
-            var auto = new AMap.AutoComplete(autoOptions2);
-            var placeSearch = new AMap.PlaceSearch({
-                map: map
-            });  //构造地点查询类
-            auto.on("select", select);//注册监听，当选中某条记录时会触发
-            function select(e) {
-                placeSearch.setCity(e.poi.adcode);
-                placeSearch.search(e.poi.name, function (status, data) {
-                    if (status !== 'complete')
-                        return;
-                    var pois = data.poiList.pois;
-                    for (var i = 0; i < pois.length; ++i) {
-                        var marker = new AMap.Marker({
-                            content: '<div class="marker" >' + i + '</div>',
-                            position: pois[i].location,
-                            map: map,
-                            label: {
-                                offset:
-                                    new AMap.Pixel(5, 0), //修改label相对于maker的位置
-                                content: "设为出发地"
-                            }
-                        });
-                        sourceMarkArray.push(marker);
-                        marker.id = pois[i].id;
-                        marker.name = pois[i].name;
-                        marker.on('click', function () {
-                            console.log("出发地:Selected:" + this.name +
-                                " pos:" + this.getPosition());
-                            startPosInfo = this.getPosition();
-                            sourceMarkArray.forEach(it => {
-                                it.hide();
-                            });
-                            this.hide();
-                            map.detailOnAMAP({
-                                name: this.name,
-                                location: this.getPosition(),
-                                id: this.id
-                            });
-                        })
-                    }
-                }); //关键字查询查询
-                console.log("出发地:" + e.poi.name);
-            }
-        });
-
         // //加载天气查询插件
         // AMap.plugin('AMap.Weather', function () {
         //     //创建天气查询实例
