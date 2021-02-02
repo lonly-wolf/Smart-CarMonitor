@@ -5,6 +5,7 @@ var sourceMarkArray = [];
 var dstMarkArray = [];
 var locationObject
 var mapObject
+var routeObject = false
 
 var timer
 var timer2
@@ -83,7 +84,7 @@ function initialAMapPlugins(map) {
             onError(result)
           }
         });
-      }, 5000);
+      }, 2000);
 
       timer2 = setInterval(function() {
         console.log('Ready to draw route.....');
@@ -148,6 +149,11 @@ function initialAMapPlugins(map) {
 }
 
 function drawRoutingPath(map, startPos, endPos) {
+  if (routeObject instanceof Object) {
+    console.log('Ready to destory......')
+    routeObject.destroy()
+    console.log('destory finished!')
+  }
     // add path editing
     map.plugin('AMap.DragRoute', function () {
         // path 是驾车导航的起、途径和终点，最多支持16个途经点
@@ -156,9 +162,10 @@ function drawRoutingPath(map, startPos, endPos) {
         path.push([startPos.lng, startPos.lat])
         path.push([endPos.lng, endPos.lat])
 
-        var route = new AMap.DragRoute(map, path, AMap.DrivingPolicy.LEAST_FEE)
+        routeObject =
+            new AMap.DragRoute(map, path, AMap.DrivingPolicy.LEAST_FEE)
         // 查询导航路径并开启拖拽导航
-        route.search()
+        routeObject.search()
     }) // end path editing
 }
 
