@@ -105,10 +105,18 @@
                         var testUser = setInterval(objTime.time, 1000);
 
                         var body = document.querySelector('html');
+
+                        // pc event 
                         body.addEventListener("click", objTime.eventFun);
                         body.addEventListener("keydown", objTime.eventFun);
                         body.addEventListener("mousemove", objTime.eventFun);
                         body.addEventListener("mousewheel", objTime.eventFun);
+
+                        // phone event
+                        body.addEventListener("touchstart", objTime.eventFun);
+                        body.addEventListener("touchmove", objTime.eventFun);
+                        body.addEventListener("touchend", objTime.eventFun);
+                        body.addEventListener("touchcancel", objTime.eventFun);
                     }
                 })(window)
 
