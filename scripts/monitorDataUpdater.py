@@ -9,9 +9,13 @@ import sys
 
 savePath = '..\js\monitordata.js'
 
-html = requests.get("http://www.jinjing365.com/index.asp")
+print('Ready to parse web...')
+html = requests.get("https://www.jinjing365.com/index.asp")
 etree_html = etree.HTML(html.text)
+
+print(html.text)
 content = etree_html.xpath('/html/body/script[2]/text()')
+print('Web parsed!')
 
 for it in content:
     startIndex = it.find('var capitals')
@@ -33,3 +37,4 @@ for it in content:
         f.flush()
         f.close()
         print('Monitor data parse finished!' + ' savePath:' + savePath)
+print('Finished!')
